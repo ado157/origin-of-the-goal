@@ -1,0 +1,57 @@
+﻿  25_09_29_03.cpp
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xutility(1455,1): error C3848: 具有类型“const MyCompare”的表达式会丢失一些 const-volatile 限定符以调用“bool MyCompare::operator ()(int,int)”
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xutility(1454): message : 查看对正在编译的函数 模板 实例化“bool std::_Debug_lt_pred<const MyCompare&,const _Kty&,const _Keyty&,0>(_Pr,_Ty1,_Ty2) noexcept(<expr>)”的引用
+          with
+          [
+              _Kty=int,
+              _Keyty=int,
+              _Pr=const MyCompare &,
+              _Ty1=const int &,
+              _Ty2=const int &
+          ]
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xtree(999): message : 查看对正在编译的函数 模板 实例化“std::_Tree_find_result<std::_Tree_node<int,std::_Default_allocator_traits<_Alloc>::void_pointer> *> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::_Find_lower_bound<_Key>(const _Keyty &) const”的引用
+          with
+          [
+              _Alloc=std::allocator<int>,
+              _Kty=int,
+              _Pr=MyCompare,
+              _Key=int,
+              _Keyty=int
+          ]
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xtree(1006): message : 查看对正在编译的函数 模板 实例化“std::_Tree_find_result<std::_Tree_node<int,std::_Default_allocator_traits<_Alloc>::void_pointer> *> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::_Find_lower_bound<_Key>(const _Keyty &) const”的引用
+          with
+          [
+              _Alloc=std::allocator<int>,
+              _Kty=int,
+              _Pr=MyCompare,
+              _Key=int,
+              _Keyty=int
+          ]
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xtree(1239): message : 查看对正在编译的函数 模板 实例化“std::pair<std::_Tree_node<int,std::_Default_allocator_traits<_Alloc>::void_pointer> *,bool> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::_Emplace<int>(int &&)”的引用
+          with
+          [
+              _Alloc=std::allocator<int>,
+              _Kty=int,
+              _Pr=MyCompare
+          ]
+D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xtree(1239): message : 查看对正在编译的函数 模板 实例化“std::pair<std::_Tree_node<int,std::_Default_allocator_traits<_Alloc>::void_pointer> *,bool> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::_Emplace<int>(int &&)”的引用
+          with
+          [
+              _Alloc=std::allocator<int>,
+              _Kty=int,
+              _Pr=MyCompare
+          ]
+D:\git\C++\25_09_29\25_09_29\25_09_29_03.cpp(23): message : 查看对正在编译的函数 模板 实例化“std::pair<std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<int>>>,bool> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::insert<false,0>(int &&)”的引用
+          with
+          [
+              _Kty=int,
+              _Pr=MyCompare,
+              _Alloc=std::allocator<int>
+          ]
+D:\git\C++\25_09_29\25_09_29\25_09_29_03.cpp(23): message : 查看对正在编译的函数 模板 实例化“std::pair<std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<int>>>,bool> std::_Tree<std::_Tset_traits<_Kty,_Pr,_Alloc,false>>::insert<false,0>(int &&)”的引用
+          with
+          [
+              _Kty=int,
+              _Pr=MyCompare,
+              _Alloc=std::allocator<int>
+          ]

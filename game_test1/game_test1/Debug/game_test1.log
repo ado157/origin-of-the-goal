@@ -1,0 +1,4 @@
+﻿  lineFPS.cpp
+D:\git\C++\game_test1\game_test1\lineFPS.cpp(223,26): warning C4305: “初始化”: 从“double”到“float”截断
+D:\git\C++\game_test1\game_test1\lineFPS.cpp(232,17): warning C4244: “初始化”: 从“float”转换到“int”，可能丢失数据
+  game_test1.vcxproj -> D:\git\C++\game_test1\Debug\game_test1.exe
