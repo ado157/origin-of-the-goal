@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{57d2e34d-c117-4269-acba-fe68c845145f}</ProjectGuid>
-    <RootNamespace>PVZSMASH</RootNamespace>
+    <ProjectGuid>{25041693-f2d9-41d2-9a28-751927130acb}</ProjectGuid>
+    <RootNamespace>Project4</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -138,14 +138,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="altlas.h" />
-    <ClInclude Include="game_scene.h" />
-    <ClInclude Include="menu_scene.h" />
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="scene_manager.h" />
-    <ClInclude Include="selector_scene.h" />
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>

@@ -13,32 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="头文件\Scene">
-      <UniqueIdentifier>{f731e9fb-32b1-4bd6-ad07-2dfea1a8622d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="game_scene.h">
-      <Filter>头文件\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="menu_scene.h">
-      <Filter>头文件\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene.h">
-      <Filter>头文件\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="selector_scene.h">
-      <Filter>头文件\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="scene_manager.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="altlas.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="源.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
