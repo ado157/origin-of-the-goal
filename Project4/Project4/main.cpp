@@ -21,6 +21,19 @@ POINT player_pos = { 500,500 };
 IMAGE img_shadow;
 void putimage_alpha(int x, int y, IMAGE* img);
 
+class Player
+{
+public:
+	Player() {
+
+	}
+	~Player() {
+
+	}
+private:
+
+private:
+};
 
 class Animation
 {
