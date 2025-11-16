@@ -6,7 +6,6 @@ int idx_current_anim = 0;
 const int PLAYER_ANIM_NUM = 6;
 
 
-
 const int WINDOW_WIDTH=1280;
 const int WINDOW_HEIGHT=720;
 
@@ -30,13 +29,13 @@ public:
 			loadimage(frame, path_file);
 			frame_list.push_back(frame);
 		}
-	};
+	}
 	~Animation() {
 		for (size_t i = 0; i < frame_list.size(); i++) {
 			delete frame_list[i];
 		}
 
-	};
+	}
 	void Play(int x, int y, int delta) {
 		timer += delta;
 		if (timer >= interval_ms) {
@@ -294,7 +293,7 @@ void TryGenerateEnemy(std::vector<Enemy*>& enemy_list)
 {
 	const int INTERVAL = 100;
 	static int counter = 0;
-	if ((+counter) % INTERVAL == 0)
+	if ((++counter) % INTERVAL == 0)
 		enemy_list.push_back(new Enemy());
 }
 int main() {
