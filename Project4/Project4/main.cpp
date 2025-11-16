@@ -115,17 +115,17 @@ public:
 		if (len_dir != 0) {
 			double normalized_x = dir_x / len_dir;
 			double normalized_y = dir_y / len_dir;
-			player_pos.x += (int)(SPEED * normalized_x);
-			player_pos.y += (int)(SPEED * normalized_y);
+			position.x += (int)(SPEED * normalized_x);
+			position.y += (int)(SPEED * normalized_y);
 		}
-		if (player_pos.x < 0)player_pos.x = 0;
-		if (player_pos.y < 0)player_pos.y = 0;
-		if (player_pos.x + FRAME_WIDTH > WINDOW_WIDTH)player_pos.x = WINDOW_WIDTH - FRAME_WIDTH;
-		if (player_pos.y + FRAME_HEIGHT > WINDOW_HEIGHT)player_pos.y = WINDOW_HEIGHT - FRAME_HEIGHT;
+		if (position.x < 0)position.x = 0;
+		if (position.y < 0)position.y = 0;
+		if (position.x + FRAME_WIDTH > WINDOW_WIDTH)position.x = WINDOW_WIDTH - FRAME_WIDTH;
+		if (position.y + FRAME_HEIGHT > WINDOW_HEIGHT)position.y = WINDOW_HEIGHT - FRAME_HEIGHT;
 	}
 	void Draw(int delta) {
-		int pos_shadow_x = player_pos.x + (FRAME_WIDTH / 2 - SHADOW_WIDTH / 2);
-		int pos_shadow_y = player_pos.y + FRAME_HEIGHT - 8;
+		int pos_shadow_x = position.x + (FRAME_WIDTH / 2 - SHADOW_WIDTH / 2);
+		int pos_shadow_y = position.y + FRAME_HEIGHT - 8;
 
 		putimage_alpha(pos_shadow_x, pos_shadow_y, &img_shadow);
 		static bool facing_left = false;
@@ -136,10 +136,15 @@ public:
 			facing_left = false;
 
 		if (facing_left)
-			anim_left->Play(player_pos.x, player_pos.y, delta);
+			anim_left->Play(position.x, position.y, delta);
 		else
-			anim_right->Play(player_pos.x, player_pos.y, delta);
+			anim_right->Play(position.x, position.y, delta);
 	}
+	const POINT& GetPosition()const
+	{
+		return position;
+	}
+
 private:
 	const int SPEED = 5;
 
@@ -150,16 +155,123 @@ private:
 	IMAGE img_shadow;
 	Animation* anim_left;
 	Animation* anim_right;
-	POINT player_pos = { 500,500 };
+	POINT position = { 500,500 };
 	bool is_move_up = false;
 	bool is_move_down = false;
 	bool is_move_left = false;
 	bool is_move_right = false;
 };
-void DrawPlayer(int delta, int dir_x) {
-	
+class Bullet
+{
+public:
+	POINT position = { 0,0 };
+public:
+	Bullet() = default;
+	~Bullet() = default;
+	void Draw()const {
+		setlinecolor(RGB(255, 155, 50));
+		setfillcolor(RGB(200, 7, 10));
+		fillcircle(position.x, position.y, RADIUS);
+	}
 
-}
+private:
+	const int RADIUS = 10;
+};
+
+
+class Enemy
+{
+public:
+	Enemy() {
+		loadimage(&img_shadow, _T("img/shadow_enemy.png"));
+		anim_left = new Animation(_T("img/enemy_left_%d.png"), 6, 45);
+		anim_right = new Animation(_T("img/enemy_right_%d.png"), 6, 45);
+		enum  class SpawnEdge
+		{
+			Up=0,
+			Down,
+			Left,
+			Right
+		};
+		SpawnEdge edge = (SpawnEdge)(rand() % 4);
+		switch (edge)
+		{
+		case SpawnEdge::Up:
+			position.x = rand() % WINDOW_WIDTH;
+			position.y = -FRAME_HEIGHT;
+			break;
+		case SpawnEdge::Down:
+			position.x = rand() % WINDOW_WIDTH;
+			position.y = WINDOW_HEIGHT;
+			break;
+		case SpawnEdge::Left:
+			position.x = -FRAME_HEIGHT;
+			position.y = rand() % WINDOW_WIDTH;
+			break;
+		case SpawnEdge::Right:
+			position.x = WINDOW_WIDTH;
+			position.y = rand() % WINDOW_WIDTH;
+			break;
+		default:
+			break;
+		}
+
+	}
+	~Enemy() {
+		delete anim_left;
+		delete anim_right;
+	}
+public:
+	bool CheckBulletCollision(const Bullet& bullet)
+	{
+		return false;
+	}
+	bool CheckPlayerCollision(const Player& player)
+	{
+		return false;
+	}
+	void Move(const Player& player)
+	{
+		const POINT& player_position = player.GetPosition();
+		int dir_x = player_position.x - position.x;
+		int dir_y = player_position.y - position.y;
+
+		double len_dir = sqrt(dir_x * dir_x + dir_y * dir_y);
+		if (len_dir != 0) {
+			double normalized_x = dir_x / len_dir;
+			double normalized_y = dir_y / len_dir;
+			position.x += (int)(SPEED * normalized_x);
+			position.y += (int)(SPEED * normalized_y);
+		}
+	}
+	void Draw(int delta)
+	{
+		int pos_shadow_x = position.x + (FRAME_WIDTH / 2 - SHADOW_WIDTH / 2);
+		int pos_shadow_y = position.y + FRAME_HEIGHT - 35;
+
+		putimage_alpha(pos_shadow_x, pos_shadow_y, &img_shadow);
+		if (facing_left)
+			anim_left->Play(position.x, position.y, delta);
+		else
+			anim_right->Play(position.x, position.y, delta);
+	}
+
+	const POINT& GetPosition()const
+	{
+		return position;
+	}
+private:
+	const int SPEED = 2;
+	const int FRAME_WIDTH = 80;
+	const int FRAME_HEIGHT = 80;
+	const int SHADOW_WIDTH = 48;
+private:
+	IMAGE img_shadow;
+	Animation* anim_left;
+	Animation* anim_right;
+	POINT position = { 0,0 };
+	bool facing_left = false;
+};
 
 #pragma comment(lib,"MSIMG32.LIB")
 inline void putimage_alpha(int x, int y, IMAGE* img) {
@@ -167,6 +279,7 @@ inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int h = img->getheight();
 	AlphaBlend(GetImageHDC(NULL), x, y, w, h, GetImageHDC(img), 0, 0, w, h, { AC_SRC_OVER,0,255,AC_SRC_ALPHA });
 }
+
 void LoadAnimation() {
 	for (size_t i = 0; i < PLAYER_ANIM_NUM; i++) {
 		std::wstring path = L"img/player_left_" + std::to_wstring(i) + L".png";
@@ -177,43 +290,49 @@ void LoadAnimation() {
 		loadimage(&img_player_right[i], path.c_str());
 	}
 }
+void TryGenerateEnemy(std::vector<Enemy*>& enemy_list)
+{
+	const int INTERVAL = 100;
+	static int counter = 0;
+	if ((+counter) % INTERVAL == 0)
+		enemy_list.push_back(new Enemy());
+}
 int main() {
 	initgraph(1280, 720);
 
 	bool running = true;
+	Player player;
 	ExMessage msg;
 
 	IMAGE img_background;
-
-
-	LoadAnimation();
-	loadimage(&img_background, _T("img/background.png"));
-
-	BeginBatchDraw();
+	std::vector<Enemy*>enemt_list;
+		loadimage(&img_background, _T("img/background.png"));
+		BeginBatchDraw();
 	while (running) {
+
+
+
 		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg)) {
-
-		if (is_move_up)player_pos.y -= PLAYER_SPEED;
-		if (is_move_down)player_pos.y += PLAYER_SPEED;
-		if (is_move_left)player_pos.x -= PLAYER_SPEED;
-		if (is_move_right)player_pos.x += PLAYER_SPEED;
-		static int counter = 0;
-		if (++counter % 5==0) {
-			idx_current_anim++;
+			player.ProcessEvent(msg);
 		}
-		idx_current_anim = idx_current_anim % PLAYER_ANIM_NUM;
+		player.Move();
+		TryGenerateEnemy(enemt_list);
+		for (Enemy* enemy : enemt_list)
+			enemy->Move(player);
 
 		cleardevice();
-		putimage_alpha(0, 0, &img_background);
-		DrawPlayer(1000 / 180, is_move_right - is_move_left);
 
+		putimage(0, 0 ,&img_background);
+		player.Draw(1000 / 180);
+		for (Enemy* enemy : enemt_list)
+			enemy->Draw(1000 / 180);
 		FlushBatchDraw();
 		DWORD end_time = GetTickCount();
 		DWORD delta_time = end_time - start_time;
 		if (delta_time < 1000 / 180)
 		{
-			Sleep(1000 / 180 - delta_time);
+			Sleep(1000 / 188 - delta_time);
 		}
 	}
 	EndBatchDraw();
