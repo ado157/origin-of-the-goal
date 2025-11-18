@@ -15,7 +15,6 @@ IMAGE img_player_right[PLAYER_ANIM_NUM];
 void putimage_alpha(int x, int y, IMAGE* img);
 
 
-
 class Animation
 {
 public:
@@ -55,6 +54,8 @@ private:
 class Player
 {
 public:
+	const int FRAME_WIDTH = 80;
+	const int FRAME_HEIGHT = 80;
 	Player() {
 		loadimage(&img_shadow, _T("img/shadow_player.png"));
 		anim_left = new Animation(_T("img/player_left_%d.png"), 6, 45);
@@ -147,8 +148,7 @@ public:
 private:
 	const int SPEED = 5;
 
-	const int FRAME_WIDTH = 80;
-	const int FRAME_HEIGHT = 80;
+
 	const int SHADOW_WIDTH = 32;
 private:
 	IMAGE img_shadow;
@@ -160,6 +160,8 @@ private:
 	bool is_move_left = false;
 	bool is_move_right = false;
 };
+
+
 class Bullet
 {
 public:
@@ -223,11 +225,16 @@ public:
 public:
 	bool CheckBulletCollision(const Bullet& bullet)
 	{
-		return false;
+		bool is_overlap_x = bullet.position.x >= position.x && bullet.position.x < position.x + FRAME_WIDTH;
+		bool is_overlap_y = bullet.position.y >= position.y && bullet.position.y < position.y + FRAME_HEIGHT;
+		return is_overlap_x&&is_overlap_y;
 	}
 	bool CheckPlayerCollision(const Player& player)
 	{
-		return false;
+		POINT check_position = { position.x + FRAME_WIDTH / 2,position.y + FRAME_HEIGHT / 2 };
+		bool is_overlap_x = check_position.x > player.GetPosition().x && check_position.x < player.GetPosition().x + player.FRAME_WIDTH;
+		bool is_overlap_y = check_position.y > player.GetPosition().y && check_position.y < player.GetPosition().y + player.FRAME_HEIGHT;
+		return is_overlap_x && is_overlap_y;
 	}
 	void Move(const Player& player)
 	{
@@ -242,6 +249,10 @@ public:
 			position.x += (int)(SPEED * normalized_x);
 			position.y += (int)(SPEED * normalized_y);
 		}
+		if (dir_x < 0)
+			facing_left = true;
+		else if (dir_x > 0)
+			facing_left = false;
 	}
 	void Draw(int delta)
 	{
@@ -259,6 +270,14 @@ public:
 	{
 		return position;
 	}
+	void Hurt()
+	{
+		alive = false;
+	}
+	bool CheckAlive()
+	{
+		return alive;
+	}
 private:
 	const int SPEED = 2;
 	const int FRAME_WIDTH = 80;
@@ -270,9 +289,11 @@ private:
 	Animation* anim_right;
 	POINT position = { 0,0 };
 	bool facing_left = false;
+	bool alive = true;
 };
 
 #pragma comment(lib,"MSIMG32.LIB")
+#pragma comment(lib,"Winmm.lib")
 inline void putimage_alpha(int x, int y, IMAGE* img) {
 	int w = img->getwidth();
 	int h = img->getheight();
@@ -289,6 +310,8 @@ void LoadAnimation() {
 		loadimage(&img_player_right[i], path.c_str());
 	}
 }
+
+
 void TryGenerateEnemy(std::vector<Enemy*>& enemy_list)
 {
 	const int INTERVAL = 100;
@@ -296,17 +319,44 @@ void TryGenerateEnemy(std::vector<Enemy*>& enemy_list)
 	if ((++counter) % INTERVAL == 0)
 		enemy_list.push_back(new Enemy());
 }
+void UpdateBullets(std::vector<Bullet>& bullet_list, const Player& player) {
+	const double RADIAL_SPEED = 0.0045;
+	const double TANGENT_SPEED = 0.0045;
+	double randian_interval = 2 * 3.14159 / bullet_list.size();
+	POINT player_position = player.GetPosition();
+	double radius = 100 + 25 * sin(GetTickCount() * RADIAL_SPEED);
+	for (size_t i = 0; i < bullet_list.size(); i++) {
+		double radian = GetTickCount() * TANGENT_SPEED + randian_interval * i;
+		bullet_list[i].position.x = player_position.x + player.FRAME_WIDTH / 2 + (int)(radius * sin(radian));
+		bullet_list[i].position.y = player_position.y + player.FRAME_HEIGHT / 2 + (int)(radius * cos(radian));
+	}
+
+}
+void DrawPlayerScore(int score)
+{
+	static TCHAR text[64];
+	_stprintf_s(text, _T("当前玩家得分:%d"), score);
+	setbkmode(TRANSPARENT);
+	settextcolor(RGB(255, 85, 185));
+	outtextxy(10, 10, text);
+}
 int main() {
 	initgraph(1280, 720);
-
+	mciSendString(_T("open mus/bgm.mp3 alias bgm"), NULL, 0, NULL);
+	mciSendString(_T("open mus/hit.wav alias hit"), NULL, 0, NULL);
+	mciSendString(_T("play bgm repeat from 0"), NULL, 0, NULL);
 	bool running = true;
+	int score = 0;
 	Player player;
 	ExMessage msg;
 
 	IMAGE img_background;
-	std::vector<Enemy*>enemt_list;
-		loadimage(&img_background, _T("img/background.png"));
-		BeginBatchDraw();
+	std::vector<Enemy*>enemy_list;
+	std::vector<Bullet>bullet_list(3);
+
+
+	loadimage(&img_background, _T("img/background.png"));
+	BeginBatchDraw();
 	while (running) {
 
 
@@ -316,17 +366,58 @@ int main() {
 			player.ProcessEvent(msg);
 		}
 		player.Move();
-		TryGenerateEnemy(enemt_list);
-		for (Enemy* enemy : enemt_list)
+
+		UpdateBullets(bullet_list, player);
+		TryGenerateEnemy(enemy_list);
+		for (Enemy* enemy : enemy_list)
 			enemy->Move(player);
 
+		for (Enemy* enemy : enemy_list)
+		{
+			if (enemy->CheckPlayerCollision(player))
+			{
+				static TCHAR text[128];
+				_stprintf_s(text, _T("玩家得分:%d !"), score);
+
+				MessageBox(GetHWnd(), _T("扣 “1”观看战败CG"), _T("游戏结束"), MB_OK);
+				running = false; 
+				break;
+			}
+		}
+		for (Enemy* enemy : enemy_list)
+		{
+			for (const Bullet& bullet : bullet_list)
+			{
+				if (enemy->CheckBulletCollision(bullet))
+				{
+					mciSendString(_T("play hit from 0"), NULL, 0, NULL);
+
+					enemy->Hurt();
+					score++;
+				}
+			}
+		}
+		for (size_t i = 0; i < enemy_list.size(); i++)
+		{
+			Enemy* enemy = enemy_list[i];
+			if (!enemy->CheckAlive())
+			{
+				std::swap(enemy_list[i], enemy_list.back());
+				enemy_list.pop_back();
+				delete enemy;
+			}
+		}
 		cleardevice();
 
 		putimage(0, 0 ,&img_background);
 		player.Draw(1000 / 180);
-		for (Enemy* enemy : enemt_list)
+		for (Enemy* enemy : enemy_list)
 			enemy->Draw(1000 / 180);
+		for (const Bullet& bullet : bullet_list)
+			bullet.Draw();
+		DrawPlayerScore(score);
 		FlushBatchDraw();
+
 		DWORD end_time = GetTickCount();
 		DWORD delta_time = end_time - start_time;
 		if (delta_time < 1000 / 180)
