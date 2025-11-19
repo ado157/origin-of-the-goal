@@ -2,24 +2,126 @@
 #include<iostream>
 #include<string>
 #include<vector>
+
 int idx_current_anim = 0;
 const int PLAYER_ANIM_NUM = 6;
-
+bool is_game_started = false;
+bool running = true;
 
 const int WINDOW_WIDTH=1280;
 const int WINDOW_HEIGHT=720;
+
+const int BUTTON_WIDTH=192;
+const int BUTTON_HEIGHT=75;
 
 IMAGE img_player_left[PLAYER_ANIM_NUM];
 IMAGE img_player_right[PLAYER_ANIM_NUM];
 
 void putimage_alpha(int x, int y, IMAGE* img);
-
-
-class Animation
+class Button
 {
 public:
-	Animation(LPCTSTR path,int num,int interval) {
-		interval_ms = interval;
+	Button(RECT rect, LPCTSTR path_img_idle, LPCTSTR path_img_hovered, LPCTSTR path_img_pushed)
+	{
+		region = rect;
+		loadimage(&img_idle, path_img_idle);
+		loadimage(&img_hovered, path_img_hovered);
+		loadimage(&img_pushed, path_img_pushed);
+	}
+	~Button()
+	{
+
+	}
+	void ProcessEvent(const ExMessage& msg)
+	{
+		switch (msg.message)
+		{
+		case WM_MOUSEMOVE:
+			if (status == Status::Idle && CheckCursorHit(msg.x, msg.y))
+				status = Status::Hovered;
+			else if (status == Status::Hovered && !CheckCursorHit(msg.x, msg.y))
+				status = Status::Idle;
+			break;
+		case WM_LBUTTONDOWN:
+			if (CheckCursorHit(msg.x, msg.y))
+				status = Status::Pushed;
+			break;
+		case WM_LBUTTONUP:
+			if (status == Status::Pushed)
+				OnClick();
+			break;
+		default:
+			break;
+		}
+	}
+	void Draw()
+	{
+		switch (status)
+		{
+		case Status::Idle:
+			putimage(region.left, region.top, &img_idle);
+			break;
+		case Status::Hovered:
+			putimage(region.left, region.top, &img_hovered);
+			break;
+		case Status::Pushed:
+			putimage(region.left, region.top, &img_pushed);
+			break;
+		}
+	}
+protected:
+	virtual void OnClick() = 0;
+private:
+	enum  class Status
+	{
+		Idle = 0,
+		Hovered,
+		Pushed
+	};
+private:
+	RECT region;
+	IMAGE img_idle;
+	IMAGE img_hovered;
+	IMAGE img_pushed;
+	Status status = Status::Idle;
+private:
+	bool CheckCursorHit(int x, int y)
+	{
+		return x >= region.left && x <= region.right && y >= region.top && y <= region.bottom;
+	}
+};
+
+class StartGameButton :public Button
+{
+public:
+	StartGameButton(RECT rect,LPCTSTR path_img_idle,LPCTSTR path_img_hovered,LPCTSTR path_img_pushed)
+		:Button(rect,path_img_idle,path_img_hovered,path_img_pushed){}
+	~StartGameButton()=default;
+protected:
+	void OnClick()
+	{
+		is_game_started = true;
+		mciSendString(_T("play bgm repeat from 0"), NULL, 0, NULL);
+
+	}
+};
+
+class QuitGameButton :public Button {
+public:
+	QuitGameButton(RECT rect, LPCTSTR path_img_idle, LPCTSTR path_img_hovered, LPCTSTR path_img_pushed)
+		:Button(rect, path_img_idle, path_img_hovered, path_img_pushed) {}
+	~QuitGameButton() = default;
+protected:
+	void OnClick()
+	{
+		running = false;
+	}
+};
+
+class Atlas
+{
+public:
+	Atlas(LPCTSTR path,int num) {
 		TCHAR path_file[256];
 		for (size_t i = 0; i < num; i++)
 		{
@@ -29,25 +131,56 @@ public:
 			frame_list.push_back(frame);
 		}
 	}
-	~Animation() {
-		for (size_t i = 0; i < frame_list.size(); i++) {
+	~Atlas() {
+		for (size_t i = 0; i < frame_list.size(); i++)
+		{
 			delete frame_list[i];
 		}
+	}
+public:
+	std ::vector<IMAGE*>frame_list;
+};
+Atlas* atlas_player_left;
+Atlas* atlas_player_right;
+Atlas* atlas_enemy_left;
+Atlas* atlas_enemy_right;
+
+
+//struct TreeAssert
+//{
+//	Model model;
+//	Texture texture;
+//};
+//struct Tree
+//{
+//	TreeAssert* assert;
+//	int x, y, z;
+//};
+class Animation
+{
+public:
+	Animation(Atlas* atlas,int interval) {
+		interval_ms = interval;
+		anim_atlas = atlas;
+	}
+	~Animation() {
 
 	}
 	void Play(int x, int y, int delta) {
 		timer += delta;
 		if (timer >= interval_ms) {
-			idx_frame = (idx_frame + 1) % frame_list.size();
+			idx_frame = (idx_frame + 1) % anim_atlas->frame_list.size();
 			timer = 0;
 		}
-		putimage_alpha(x, y, frame_list[idx_frame]);
+		putimage_alpha(x, y, anim_atlas->frame_list[idx_frame]);
 	}
 private:
-	std::vector<IMAGE*> frame_list;
 	int interval_ms = 0;
 	int timer = 0;
 	int idx_frame = 0;
+private:
+	Atlas* anim_atlas;
+
 };
 
 
@@ -58,8 +191,8 @@ public:
 	const int FRAME_HEIGHT = 80;
 	Player() {
 		loadimage(&img_shadow, _T("img/shadow_player.png"));
-		anim_left = new Animation(_T("img/player_left_%d.png"), 6, 45);
-		anim_right = new Animation(_T("img/player_right_%d.png"), 6, 45);
+		anim_left = new Animation(atlas_player_left, 45);
+		anim_right = new Animation(atlas_player_right, 45);
 
 	}
 	~Player() {
@@ -185,8 +318,8 @@ class Enemy
 public:
 	Enemy() {
 		loadimage(&img_shadow, _T("img/shadow_enemy.png"));
-		anim_left = new Animation(_T("img/enemy_left_%d.png"), 6, 45);
-		anim_right = new Animation(_T("img/enemy_right_%d.png"), 6, 45);
+		anim_left = new Animation(atlas_enemy_left, 45);
+		anim_right = new Animation(atlas_enemy_right, 45);
 		enum  class SpawnEdge
 		{
 			Up=0,
@@ -342,19 +475,36 @@ void DrawPlayerScore(int score)
 }
 int main() {
 	initgraph(1280, 720);
+	atlas_player_left=new Atlas(_T("img/player_left_%d.png"),6);
+	atlas_player_right=new Atlas(_T("img/player_right_%d.png"), 6);
+	atlas_enemy_left=new Atlas(_T("img/enemy_left_%d.png"), 6);
+	atlas_enemy_right=new Atlas(_T("img/enemy_right_%d.png"), 6);
+
+
 	mciSendString(_T("open mus/bgm.mp3 alias bgm"), NULL, 0, NULL);
 	mciSendString(_T("open mus/hit.wav alias hit"), NULL, 0, NULL);
-	mciSendString(_T("play bgm repeat from 0"), NULL, 0, NULL);
-	bool running = true;
 	int score = 0;
 	Player player;
 	ExMessage msg;
-
+	IMAGE img_menu;
 	IMAGE img_background;
 	std::vector<Enemy*>enemy_list;
 	std::vector<Bullet>bullet_list(3);
 
+	RECT region_btn_start_game, region_btn_quit_game;
+	region_btn_start_game.left = (WINDOW_WIDTH - BUTTON_WIDTH)/2;
+	region_btn_start_game.right = region_btn_start_game.left + BUTTON_WIDTH;
+	region_btn_start_game.top = 430;
+	region_btn_start_game.bottom = region_btn_start_game.top + BUTTON_HEIGHT;
 
+	region_btn_quit_game.left = (WINDOW_WIDTH - BUTTON_WIDTH) / 2;
+	region_btn_quit_game.right = region_btn_quit_game.left + BUTTON_WIDTH;
+	region_btn_quit_game.top = 550;
+	region_btn_quit_game.bottom = region_btn_quit_game.top + BUTTON_HEIGHT;
+
+	StartGameButton btn_start_game = StartGameButton(region_btn_start_game,_T("img/ui_start_idle.png"),_T("img/ui_start_hovered.png"),_T("img/ui_start_pushed.png"));
+	QuitGameButton btn_quit_game = QuitGameButton(region_btn_quit_game, _T("img/ui_quit_idle.png"), _T("img/ui_quit_hovered.png"), _T("img/ui_quit_pushed.png"));
+	loadimage(&img_menu, _T("img/menu.png"));
 	loadimage(&img_background, _T("img/background.png"));
 	BeginBatchDraw();
 	while (running) {
@@ -363,25 +513,33 @@ int main() {
 
 		DWORD start_time = GetTickCount();
 		while (peekmessage(&msg)) {
+			if(is_game_started)
 			player.ProcessEvent(msg);
+			else
+			{
+				btn_start_game.ProcessEvent(msg);
+				btn_quit_game.ProcessEvent(msg);
+			}
 		}
 		player.Move();
 
 		UpdateBullets(bullet_list, player);
-		TryGenerateEnemy(enemy_list);
-		for (Enemy* enemy : enemy_list)
-			enemy->Move(player);
+		if (is_game_started) {
+			TryGenerateEnemy(enemy_list);
+			for (Enemy* enemy : enemy_list)
+				enemy->Move(player);
 
-		for (Enemy* enemy : enemy_list)
-		{
-			if (enemy->CheckPlayerCollision(player))
+			for (Enemy* enemy : enemy_list)
 			{
-				static TCHAR text[128];
-				_stprintf_s(text, _T("玩家得分:%d !"), score);
+				if (enemy->CheckPlayerCollision(player))
+				{
+					static TCHAR text[128];
+					_stprintf_s(text, _T("玩家得分:%d !"), score);
 
-				MessageBox(GetHWnd(), _T("扣 “1”观看战败CG"), _T("游戏结束"), MB_OK);
-				running = false; 
-				break;
+					MessageBox(GetHWnd(), _T("扣 “1”观看战败CG"), _T("游戏结束"), MB_OK);
+					running = false;
+					break;
+				}
 			}
 		}
 		for (Enemy* enemy : enemy_list)
@@ -409,22 +567,34 @@ int main() {
 		}
 		cleardevice();
 
-		putimage(0, 0 ,&img_background);
-		player.Draw(1000 / 180);
-		for (Enemy* enemy : enemy_list)
-			enemy->Draw(1000 / 180);
-		for (const Bullet& bullet : bullet_list)
-			bullet.Draw();
-		DrawPlayerScore(score);
+		if (is_game_started) {
+			putimage(0, 0, &img_background);
+			player.Draw(1000 / 180);
+			for (Enemy* enemy : enemy_list)
+				enemy->Draw(1000 / 180);
+			for (const Bullet& bullet : bullet_list)
+				bullet.Draw();
+			DrawPlayerScore(score);
+		}
+		else
+		{
+			putimage(0, 0, &img_menu);
+			btn_start_game.Draw();
+			btn_quit_game.Draw();
+		}
 		FlushBatchDraw();
 
 		DWORD end_time = GetTickCount();
 		DWORD delta_time = end_time - start_time;
 		if (delta_time < 1000 / 180)
 		{
-			Sleep(1000 / 188 - delta_time);
+			Sleep(1000 / 180 - delta_time);
 		}
 	}
+	delete atlas_player_left;
+	delete atlas_player_right;
+	delete atlas_enemy_left;
+	delete atlas_enemy_right;
 	EndBatchDraw();
 	return 0;
 }
