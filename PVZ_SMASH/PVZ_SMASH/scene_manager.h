@@ -2,7 +2,7 @@
 #include"Scene.h"
 extern Scene* menu_scene;
 extern Scene* game_scene;
-extern Scene* Selector_scene;
+extern Scene* selector_scene;
 
 class SceneManager
 {
@@ -38,8 +38,8 @@ public:
 		}
 		current_scene->on_enter();
 	}
-	void on_update() {
-		current_scene->on_update();
+	void on_update(int delta) {
+		current_scene->on_update(delta);
 	}
 	void on_draw() {
 		current_scene->on_draw();

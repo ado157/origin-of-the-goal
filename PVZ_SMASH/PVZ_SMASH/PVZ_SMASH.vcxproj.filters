@@ -33,7 +33,16 @@
     <ClInclude Include="scene_manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="altlas.h">
+    <ClInclude Include="atlas.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="animation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="vector2.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

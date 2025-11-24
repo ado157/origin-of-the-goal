@@ -15,6 +15,24 @@ public:
 			loadimage(&img_list[i], path_file);
 		}
 	}
+	void clear()
+	{
+		img_list.clear();
+	}
+	int get_size()
+	{
+		return (int)img_list.size();
+	}
+	IMAGE* get_image(int idx)
+	{
+		if (idx < 0 || idx >= img_list.size())
+			return nullptr;
+		return &img_list[idx];
+	}
+	void add_image(const IMAGE& img)
+	{
+		img_list.push_back(img); 
+	}
 private:
 	std::vector<IMAGE>img_list;
 };
