@@ -15,7 +15,7 @@ public:
 	{
 		std::cout << "游戏正在运行..." << std::endl;
 	}
-	virtual void on_draw()
+	virtual void on_draw(const Camera& camera)
 	{
 		outtextxy(10, 10, _T("游戏局内绘图内容"));
 	}

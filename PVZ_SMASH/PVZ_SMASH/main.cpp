@@ -10,6 +10,7 @@
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
 Scene* selector_scene = nullptr;
+Camera main_camera;
 SceneManager scene_manager;
 IMAGE img_menu_background;                  // Ö÷²Ëµ¥±³¾°Í¼Æ¬
 
@@ -206,7 +207,7 @@ int main() {
 		scene_manager.on_update(delta_tick);
 		last_tick_time = current_tick_time;
 		cleardevice();
-		scene_manager.on_draw();
+		scene_manager.on_draw(main_camera);
 		FlushBatchDraw();
 
 		DWORD frame_end_time = GetTickCount();

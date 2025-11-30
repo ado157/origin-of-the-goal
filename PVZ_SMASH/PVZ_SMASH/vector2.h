@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 class Vector2
 {
 public:
@@ -39,5 +40,16 @@ public:
 	void operator*=(float val)
 	{
 		x *= val, y*= val;
+	}
+	float length()
+	{
+		return sqrt(x * x + y * y);
+	}
+	Vector2 normalize()
+	{
+		float len = length();
+		if (len == 0)
+			return Vector2(0, 0);
+		return Vector2(x / len, y / len);
 	}
 };
