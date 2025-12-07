@@ -16,6 +16,9 @@
     <Filter Include="头文件\Scene">
       <UniqueIdentifier>{f731e9fb-32b1-4bd6-ad07-2dfea1a8622d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\player">
+      <UniqueIdentifier>{5a3e8eaf-17fc-417d-912a-4dce42142f2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_scene.h">
@@ -50,6 +53,21 @@
     </ClInclude>
     <ClInclude Include="timer.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="platform.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>头文件\player</Filter>
+    </ClInclude>
+    <ClInclude Include="peashooter_player.h">
+      <Filter>头文件\player</Filter>
+    </ClInclude>
+    <ClInclude Include="sunflower_player.h">
+      <Filter>头文件\player</Filter>
+    </ClInclude>
+    <ClInclude Include="player_id.h">
+      <Filter>头文件\player</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

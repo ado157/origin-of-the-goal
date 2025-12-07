@@ -1,17 +1,29 @@
 #include"util.h"
 #include"atlas.h"
 #include"Scene.h"
+#include"player.h"
 #include"menu_scene.h"
 #include"game_scene.h"
 #include<graphics.h>
 #include"scene_manager.h"
 #include"selector_scene.h"
+#include"platform.h"
 #pragma comment(lib,"Winmm.lib")
+
+bool is_debug = false;
+
 Scene* menu_scene = nullptr;
 Scene* game_scene = nullptr;
 Scene* selector_scene = nullptr;
+
 Camera main_camera;
 SceneManager scene_manager;
+
+std::vector<platform>platform_list;
+
+player* player_1 = nullptr;
+player* player_2 = nullptr;
+
 IMAGE img_menu_background;                  // Ö÷²Ëµ¥±³¾°Í¼Æ¬
 
 IMAGE img_VS;                               // VS ÒÕÊõ×ÖÍ¼Æ¬
