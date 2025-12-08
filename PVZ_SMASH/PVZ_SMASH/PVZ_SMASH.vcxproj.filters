@@ -19,6 +19,9 @@
     <Filter Include="头文件\player">
       <UniqueIdentifier>{5a3e8eaf-17fc-417d-912a-4dce42142f2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\bullet">
+      <UniqueIdentifier>{aec193fe-22e0-4695-afc4-a20fa0558114}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_scene.h">
@@ -68,6 +71,18 @@
     </ClInclude>
     <ClInclude Include="player_id.h">
       <Filter>头文件\player</Filter>
+    </ClInclude>
+    <ClInclude Include="bullet.h">
+      <Filter>头文件\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="pea_bullet.h">
+      <Filter>头文件\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="sun_bullet_ex.h">
+      <Filter>头文件\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="sun_bullet.h">
+      <Filter>头文件\bullet</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
