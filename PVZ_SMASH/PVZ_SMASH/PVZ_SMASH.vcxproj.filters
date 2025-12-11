@@ -13,14 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="头文件\Scene">
-      <UniqueIdentifier>{f731e9fb-32b1-4bd6-ad07-2dfea1a8622d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\player">
       <UniqueIdentifier>{5a3e8eaf-17fc-417d-912a-4dce42142f2d}</UniqueIdentifier>
     </Filter>
     <Filter Include="头文件\bullet">
       <UniqueIdentifier>{aec193fe-22e0-4695-afc4-a20fa0558114}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\Scene">
+      <UniqueIdentifier>{f731e9fb-32b1-4bd6-ad07-2dfea1a8622d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +83,9 @@
     </ClInclude>
     <ClInclude Include="sun_bullet.h">
       <Filter>头文件\bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="status_bar.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

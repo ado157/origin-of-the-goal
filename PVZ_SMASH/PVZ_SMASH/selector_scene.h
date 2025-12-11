@@ -39,6 +39,8 @@ extern IMAGE img_avatar_sunflower;     // ÁúÈÕ¿ûÍ·ÏñÍ¼Æ¬
 
 extern SceneManager scene_manager;
 
+extern IMAGE* img_player_1_avatar;
+extern IMAGE* img_player_2_avatar;
 class SelectorScene :public Scene
 {
 public:
@@ -250,9 +252,12 @@ public:
 		{
 		case PlayerType::Peashooter:
 			player_1 = new PeashooterPlayer();
+			img_player_1_avatar = &img_avatar_peashooter;
 			break;
 		case PlayerType::Sunflower:
 			player_1 = new SunflowerPlayer();
+			img_player_1_avatar = &img_avatar_sunflower;
+
 			break;
 		default:
 			break;
@@ -262,9 +267,11 @@ public:
 		{
 		case PlayerType::Peashooter:
 			player_2 = new PeashooterPlayer();
+			img_player_2_avatar = &img_avatar_peashooter;
 			break;
 		case PlayerType::Sunflower:
 			player_2 = new SunflowerPlayer();
+			img_player_2_avatar = &img_avatar_sunflower;
 			break;
 		default:
 			break;

@@ -1,6 +1,7 @@
 #include"util.h"
 #include"atlas.h"
 #include"Scene.h"
+#include"bullet.h"
 #include"player.h"
 #include"menu_scene.h"
 #include"game_scene.h"
@@ -20,9 +21,13 @@ Camera main_camera;
 SceneManager scene_manager;
 
 std::vector<platform>platform_list;
+std::vector<Bullet*>Bullet_list;
 
 player* player_1 = nullptr;
 player* player_2 = nullptr;
+
+IMAGE* img_player_1_avatar = nullptr;
+IMAGE* img_player_2_avatar = nullptr;
 
 IMAGE img_menu_background;                  // Ö÷²Ëµ¥±³¾°Í¼Æ¬
 
