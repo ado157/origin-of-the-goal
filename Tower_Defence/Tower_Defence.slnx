@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Tower_Defence/Tower_Defence.vcxproj" Id="844e7c3c-9803-4db4-8802-957ec28b90cf" />
+</Solution>
