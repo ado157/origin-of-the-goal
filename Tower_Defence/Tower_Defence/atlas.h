@@ -4,17 +4,22 @@
 
 #include<string>
 #include<vector>
+#include<memory>
+
+struct AtlasTextureDeleter
+{
+	void operator()(SDL_Texture* texture) const
+	{
+		if (texture)
+			SDL_DestroyTexture(texture);
+	}
+};
 
 class Atlas
 {
 public:
 	Atlas() = default;
-	~Atlas() {
-		for (SDL_Texture* texture : tex_list)
-		{
-			SDL_DestroyTexture(texture);
-		}
-	}
+  ~Atlas() = default;
 
 	void load(SDL_Renderer* renderer, const char* path_template, int num)
 	{
@@ -22,8 +27,7 @@ public:
 		{
 			char path_file[256];
 			sprintf_s(path_file,path_template, i+1);
-			SDL_Texture* texture = IMG_LoadTexture(renderer, path_file);
-			tex_list.push_back(texture);
+            tex_list.emplace_back(IMG_LoadTexture(renderer, path_file));
 		}
 	}
 	void clear()
@@ -40,14 +44,14 @@ public:
 	{
 		if (idx < 0 || idx >=tex_list.size())
 			return nullptr;
-		return tex_list[idx];
+       return tex_list[idx].get();
 	}
 	void add_texture(SDL_Texture* texture)
 	{
-		tex_list.push_back(texture);
+        tex_list.emplace_back(texture);
 	}
 
 private:
-	std::vector<SDL_Texture*> tex_list;
+ std::vector<std::unique_ptr<SDL_Texture, AtlasTextureDeleter>> tex_list;
 
 };

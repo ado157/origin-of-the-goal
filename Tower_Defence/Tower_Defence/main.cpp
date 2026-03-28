@@ -18,11 +18,64 @@
 #include<string>
 #include<vector>
 #include<algorithm>
+#include<memory>
+// 资源释放器
+struct TTFFontDeleter
+{
+	void operator()(TTF_Font* font) const
+	{
+		if (font)
+			TTF_CloseFont(font);
+	}
+};
+struct SDLWindowDeleter
+{
+	void operator()(SDL_Window* window)const
+	{
+		if(window)
+			SDL_DestroyWindow(window);
+	}
+};
+struct SDLRendererDeleter
+{
+	void operator()(SDL_Renderer* renderer)const
+	{
+		if(renderer)
+			SDL_DestroyRenderer(renderer);
+	}
+};
+struct SDLTextureDeleter
+{
+	void operator()(SDL_Texture* texture) const
+	{
+		if (texture)
+			SDL_DestroyTexture(texture);
+	}
+};
+struct MixMusicDeleter
+{
+	void operator()(Mix_Music* music) const
+	{
+		if (music)
+			Mix_FreeMusic(music);
+	}
+};
+struct MixChunkDeleter
+{
+	void operator()(Mix_Chunk* chunk) const
+	{
+		if (chunk)
+			Mix_FreeChunk(chunk);
+	}
+};
 
-Camera* camera = nullptr;						// 摄像机
 
-SDL_Window* window = nullptr;					// 游戏窗口
-SDL_Renderer* renderer = nullptr;				// 渲染器
+
+
+std::unique_ptr<Camera> camera;					// 摄像机
+
+std::unique_ptr<SDL_Window, SDLWindowDeleter> window;					// 游戏窗口
+std::unique_ptr<SDL_Renderer, SDLRendererDeleter> renderer;				// 渲染器
 
 bool is_quit = false;							// 是否退出程序
 
@@ -33,6 +86,13 @@ SDL_Texture* tex_crosshair = nullptr;			// 光标准星纹理
 SDL_Texture* tex_background = nullptr;			// 背景纹理
 SDL_Texture* tex_barrel_idle = nullptr;			// 炮管默认状态纹理
 
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_heart_owner;		// 生命值图标纹理拥有者
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_bullet_owner;		// 子弹纹理拥有者
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_battery_owner;		// 炮台基座纹理拥有者
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_crosshair_owner;	// 光标准星纹理拥有者
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_background_owner;	// 背景纹理拥有者
+std::unique_ptr<SDL_Texture, SDLTextureDeleter> tex_barrel_idle_owner;	// 炮管默认状态纹理拥有者
+
 Atlas atlas_barrel_fire;						// 炮管开火动画图集
 Atlas atlas_chicken_fast;						// 快速鸡动画图集
 Atlas atlas_chicken_medium;						// 中速鸡动画图集
@@ -42,17 +102,27 @@ Atlas atlas_explosion;							// 爆炸效果动画图集
 Mix_Music* music_bgm = nullptr;					// 背景音乐
 Mix_Music* music_loss = nullptr;				// 失败音乐
 
+std::unique_ptr<Mix_Music, MixMusicDeleter> music_bgm_owner;			// 背景音乐拥有者
+std::unique_ptr<Mix_Music, MixMusicDeleter> music_loss_owner;			// 失败音乐拥有者
+
 Mix_Chunk* sound_hurt = nullptr;				// 生命值降低音效
 Mix_Chunk* sound_fire_1 = nullptr;				// 炮管开火音效1
 Mix_Chunk* sound_fire_2 = nullptr;				// 炮管开火音效2
 Mix_Chunk* sound_fire_3 = nullptr;				// 炮管开火音效3
 Mix_Chunk* sound_explosion = nullptr;			// 爆炸音效
-TTF_Font* font = nullptr;						// 得分显示字体
+
+std::unique_ptr<Mix_Chunk, MixChunkDeleter> sound_hurt_owner;			// 生命值降低音效拥有者
+std::unique_ptr<Mix_Chunk, MixChunkDeleter> sound_fire_1_owner;			// 炮管开火音效1拥有者
+std::unique_ptr<Mix_Chunk, MixChunkDeleter> sound_fire_2_owner;			// 炮管开火音效2拥有者
+std::unique_ptr<Mix_Chunk, MixChunkDeleter> sound_fire_3_owner;			// 炮管开火音效3拥有者
+std::unique_ptr<Mix_Chunk, MixChunkDeleter> sound_explosion_owner;		// 爆炸音效拥有者
+
+std::unique_ptr<TTF_Font, TTFFontDeleter> font;						// 得分显示字体
 
 int hp = 10;									//生命值
 int score = 0;									//得分
 std::vector<Bullet> bullet_list;				//子弹列表
-std::vector<Chicken*> chicken_list;				//鸡列表
+std::vector<std::unique_ptr<Chicken>> chicken_list;				//鸡列表
 
 int num_per_gen = 2;							//每波生成鸡的数量
 Timer timer_generate;							//僵尸鸡生成生成定时器
@@ -74,8 +144,13 @@ void unload_resources();						//卸载游戏资源
 void init();									//初始化游戏
 void deinit();									//反初始化游戏
 void on_update(float delta);					//逻辑更新
-void on_render(const Camera& camera);								//画面渲染
+void on_render(const Camera& camera);			//画面渲染
 void mainloop();								//主循环
+
+
+
+
+
 int main(int argc, char* argv[])
 {
 	init();
@@ -95,15 +170,15 @@ void init()
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
 	Mix_AllocateChannels(32);
 
-	window = SDL_CreateWindow("Tower Defence",
+	window.reset(SDL_CreateWindow("Tower Defence",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		1280, 720, SDL_WINDOW_SHOWN);
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+		1280, 720, SDL_WINDOW_SHOWN));
+	renderer.reset(SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED));
 	SDL_ShowCursor(SDL_DISABLE);
 
 	load_resources();
 
-	camera = new Camera(renderer);
+	camera = std::make_unique<Camera>(renderer.get());
 	timer_generate.set_one_shot(false);
 	timer_generate.set_wait_time(1.5f);
 	timer_generate.set_one_timeout([&]()
@@ -111,14 +186,14 @@ void init()
 			for (int i = 0; i < num_per_gen; i++)
 			{
 				int val = rand() % 100;
-				Chicken* chicken = nullptr;
+             std::unique_ptr<Chicken> chicken;
 				if (val<50)
-					chicken = new ChickenSlow();
+                    chicken = std::make_unique<ChickenSlow>();
 				else if (val<80)
-					chicken = new ChickenMedium();
+                  chicken = std::make_unique<ChickenMedium>();
 				else
-					chicken = new ChickenFast();
-				chicken_list.push_back(chicken);
+                    chicken = std::make_unique<ChickenFast>();
+				chicken_list.push_back(std::move(chicken));
 			}
 		});
 
@@ -143,13 +218,11 @@ void init()
 }
 void deinit()
 {
-	delete camera;
+	camera.reset();
 	unload_resources();
-	
-	camera = nullptr;
-
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+	font.reset();
+	renderer.reset();
+	window.reset();
 
 	TTF_Quit();
 	Mix_Quit();
@@ -158,49 +231,79 @@ void deinit()
 }
 void load_resources()
 {
-	tex_heart = IMG_LoadTexture(renderer, "resources/heart.png");
-	tex_bullet = IMG_LoadTexture(renderer, "resources/bullet.png");
-	tex_battery = IMG_LoadTexture(renderer, "resources/battery.png");
-	tex_crosshair = IMG_LoadTexture(renderer, "resources/crosshair.png");
-	tex_background = IMG_LoadTexture(renderer, "resources/background.png");
-	tex_barrel_idle = IMG_LoadTexture(renderer, "resources/barrel_idle.png");
+	tex_heart_owner.reset(IMG_LoadTexture(renderer.get(), "resources/heart.png"));
+	tex_bullet_owner.reset(IMG_LoadTexture(renderer.get(), "resources/bullet.png"));
+	tex_battery_owner.reset(IMG_LoadTexture(renderer.get(), "resources/battery.png"));
+	tex_crosshair_owner.reset(IMG_LoadTexture(renderer.get(), "resources/crosshair.png"));
+	tex_background_owner.reset(IMG_LoadTexture(renderer.get(), "resources/background.png"));
+	tex_barrel_idle_owner.reset(IMG_LoadTexture(renderer.get(), "resources/barrel_idle.png"));
 
-	atlas_barrel_fire.load(renderer, "resources/barrel_fire_%d.png", 3);
-	atlas_chicken_fast.load(renderer, "resources/chicken_fast_%d.png", 4);
-	atlas_chicken_medium.load(renderer, "resources/chicken_medium_%d.png", 6);
-	atlas_chicken_slow.load(renderer, "resources/chicken_slow_%d.png", 8);
-	atlas_explosion.load(renderer, "resources/explosion_%d.png", 5);
+	tex_heart = tex_heart_owner.get();
+	tex_bullet = tex_bullet_owner.get();
+	tex_battery = tex_battery_owner.get();
+	tex_crosshair = tex_crosshair_owner.get();
+	tex_background = tex_background_owner.get();
+	tex_barrel_idle = tex_barrel_idle_owner.get();
 
-	music_bgm = Mix_LoadMUS("resources/bgm.mp3");
-	music_loss = Mix_LoadMUS("resources/loss.mp3");
+	atlas_barrel_fire.load(renderer.get(), "resources/barrel_fire_%d.png", 3);
+	atlas_chicken_fast.load(renderer.get(), "resources/chicken_fast_%d.png", 4);
+	atlas_chicken_medium.load(renderer.get(), "resources/chicken_medium_%d.png", 6);
+	atlas_chicken_slow.load(renderer.get(), "resources/chicken_slow_%d.png", 8);
+	atlas_explosion.load(renderer.get(), "resources/explosion_%d.png", 5);
 
-	sound_hurt = Mix_LoadWAV("resources/hurt.wav");
-	sound_fire_1 = Mix_LoadWAV("resources/fire_1.wav");
-	sound_fire_2 = Mix_LoadWAV("resources/fire_2.wav");
-	sound_fire_3 = Mix_LoadWAV("resources/fire_3.wav");
-	sound_explosion = Mix_LoadWAV("resources/explosion.wav");
+   music_bgm_owner.reset(Mix_LoadMUS("resources/bgm.mp3"));
+	music_loss_owner.reset(Mix_LoadMUS("resources/loss.mp3"));
 
-	font = TTF_OpenFont("resources/IPix.ttf", 28);
+	sound_hurt_owner.reset(Mix_LoadWAV("resources/hurt.wav"));
+	sound_fire_1_owner.reset(Mix_LoadWAV("resources/fire_1.wav"));
+	sound_fire_2_owner.reset(Mix_LoadWAV("resources/fire_2.wav"));
+	sound_fire_3_owner.reset(Mix_LoadWAV("resources/fire_3.wav"));
+	sound_explosion_owner.reset(Mix_LoadWAV("resources/explosion.wav"));
+
+	music_bgm = music_bgm_owner.get();
+	music_loss = music_loss_owner.get();
+
+	sound_hurt = sound_hurt_owner.get();
+	sound_fire_1 = sound_fire_1_owner.get();
+	sound_fire_2 = sound_fire_2_owner.get();
+	sound_fire_3 = sound_fire_3_owner.get();
+	sound_explosion = sound_explosion_owner.get();
+
+	font.reset (TTF_OpenFont("resources/IPix.ttf", 28));
 }
 
 void unload_resources()
 {
-	SDL_DestroyTexture(tex_heart);
-	SDL_DestroyTexture(tex_bullet);
-	SDL_DestroyTexture(tex_battery);
-	SDL_DestroyTexture(tex_crosshair);
-	SDL_DestroyTexture(tex_background);
-	SDL_DestroyTexture(tex_barrel_idle);
+  tex_heart_owner.reset();
+	tex_bullet_owner.reset();
+	tex_battery_owner.reset();
+	tex_crosshair_owner.reset();
+	tex_background_owner.reset();
+	tex_barrel_idle_owner.reset();
+
+	tex_heart = nullptr;
+	tex_bullet = nullptr;
+	tex_battery = nullptr;
+	tex_crosshair = nullptr;
+	tex_background = nullptr;
+	tex_barrel_idle = nullptr;
 
 
-	Mix_FreeMusic(music_bgm);
-	Mix_FreeMusic(music_loss);
+   music_bgm_owner.reset();
+	music_loss_owner.reset();
+	sound_hurt_owner.reset();
+	sound_fire_1_owner.reset();
+	sound_fire_2_owner.reset();
+	sound_fire_3_owner.reset();
+	sound_explosion_owner.reset();
 
-	Mix_FreeChunk(sound_hurt);
-	Mix_FreeChunk(sound_fire_1);
-	Mix_FreeChunk(sound_fire_2);
-	Mix_FreeChunk(sound_fire_3);
-	Mix_FreeChunk(sound_explosion);
+	music_bgm = nullptr;
+	music_loss = nullptr;
+	sound_hurt = nullptr;
+	sound_fire_1 = nullptr;
+	sound_fire_2 = nullptr;
+	sound_fire_3 = nullptr;
+	sound_explosion = nullptr;
 }
 void mainloop()
 {
@@ -238,7 +341,7 @@ void mainloop()
 		duration<float> delta = duration<float>(frame_start - last_tick);
 		on_update(delta.count());
 		on_render(*camera);
-		SDL_RenderPresent(renderer);
+		SDL_RenderPresent(renderer.get());
 
 		last_tick = frame_start;
 		nanoseconds sleep_duration = frame_duration - duration_cast<nanoseconds>(steady_clock::now() - frame_start);
@@ -255,7 +358,7 @@ void mainloop()
 		for (Bullet& bullet : bullet_list)
 			bullet.on_update(delta);
 		//更新僵尸鸡对象并处理子弹的碰撞
-		for (Chicken* chicken : chicken_list)
+       for (auto& chicken : chicken_list)
 		{
 			chicken->on_update(delta);
 
@@ -297,17 +400,15 @@ void mainloop()
 		//移除无效的僵尸鸡对象、
 		chicken_list.erase(std::remove_if(
 			chicken_list.begin(), chicken_list.end(),
-			[](Chicken* chicken)
+            [](const std::unique_ptr<Chicken>& chicken)
 			{
-				bool can_remove = chicken->can_remove();
-				if (can_remove)delete chicken;
-				return can_remove;
+                return chicken->can_remove();
 			}),
 			chicken_list.end());
 
 		//对场景中的僵尸鸡按竖直坐标排序
 		std::sort(chicken_list.begin(), chicken_list.end(),
-			[](const Chicken* chicken_1, const Chicken* chicken_2)
+          [](const std::unique_ptr<Chicken>& chicken_1, const std::unique_ptr<Chicken>& chicken_2)
 			{
 				return chicken_1->get_position().y < chicken_2->get_position().y;
 			});
@@ -346,7 +447,7 @@ void mainloop()
 			Mix_HaltMusic();
 			Mix_PlayMusic(music_loss, 0);
 			std::string msg = "游戏最终得分:" + std::to_string(score);
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,"游戏结束", msg.c_str(), window);
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION,"游戏结束", msg.c_str(), window.get());
 		}
 	}
 
@@ -365,7 +466,7 @@ void mainloop()
 			camera.render_texture(tex_background, nullptr, &rect_background, 0, nullptr);
 		}
 		//绘制僵尸鸡
-		for (Chicken* chicken : chicken_list)
+       for (const auto& chicken : chicken_list)
 			chicken->on_render(camera);
 		
 		//绘制子弹
@@ -412,21 +513,21 @@ void mainloop()
 					15 + i * (width_heart + 10),15,
 					width_heart,height_heart
 				};
-				SDL_RenderCopy(renderer, tex_heart, nullptr, &rect_dst);
+				SDL_RenderCopy(renderer.get(), tex_heart, nullptr, &rect_dst);
 			}
 		}
 		//绘制得分
 		{
 			std::string str_score = "SCORE: " + std::to_string(score);
-			SDL_Surface* suf_score_bg = TTF_RenderUTF8_Blended(font, str_score.c_str(), { 55,55,55,255 });
-			SDL_Surface* suf_score_fg = TTF_RenderUTF8_Blended(font, str_score.c_str(), { 255,255,255,255 });
-			SDL_Texture* tex_score_bg = SDL_CreateTextureFromSurface(renderer, suf_score_bg);
-			SDL_Texture* tex_score_fg = SDL_CreateTextureFromSurface(renderer, suf_score_fg);
+			SDL_Surface* suf_score_bg = TTF_RenderUTF8_Blended(font.get(), str_score.c_str(), {55,55,55,255});
+			SDL_Surface* suf_score_fg = TTF_RenderUTF8_Blended(font.get(), str_score.c_str(), {255,255,255,255});
+			SDL_Texture* tex_score_bg = SDL_CreateTextureFromSurface(renderer.get(), suf_score_bg);
+			SDL_Texture* tex_score_fg = SDL_CreateTextureFromSurface(renderer.get(), suf_score_fg);
 			SDL_Rect rect_dst_scrore = { 1280 - suf_score_bg->w - 15,15,suf_score_bg->w,suf_score_bg->h };
-			SDL_RenderCopy(renderer, tex_score_bg, nullptr, &rect_dst_scrore);
+			SDL_RenderCopy(renderer.get(), tex_score_bg, nullptr, &rect_dst_scrore);
 			rect_dst_scrore.x -= 2;
 			rect_dst_scrore.y -= 2;
-			SDL_RenderCopy(renderer, tex_score_fg, nullptr, &rect_dst_scrore);
+			SDL_RenderCopy(renderer.get(), tex_score_fg, nullptr, &rect_dst_scrore);
 			SDL_DestroyTexture(tex_score_bg);
 			SDL_DestroyTexture(tex_score_fg);
 			SDL_FreeSurface(suf_score_bg);

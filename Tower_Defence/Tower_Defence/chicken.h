@@ -27,7 +27,7 @@ public:
 		position.x = 40.0f + (rand() % 1200);
 		position.y = -50;
 	}
-	~Chicken() = default;
+   virtual ~Chicken() = default;
 
 	const Vector2& get_position() const
 	{
